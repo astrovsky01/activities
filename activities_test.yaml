@@ -4,10 +4,10 @@ alignmap:
     align:
         description: "TEST123"
         kallisto:
-            tool_id: kallisto_bus
+            tool_id: kallistobus
             description: "qwerty"
         alevin:
-            tool_id: alevin
+            tool_id: alevin_test
             description: "qwerty1"
     map:
         description: "TEST345"
@@ -35,6 +35,11 @@ dimredux:
             description: "qwerty5"
             tool_id: raceid
     tsne:
+        description: "random2"
+        rtsne:
+            description: "qwerty6"
+            tool_id: rtsne
+    test:
         description: "random2"
         rtsne:
             description: "qwerty6"
