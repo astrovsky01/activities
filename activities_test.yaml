@@ -27,17 +27,21 @@ filter:
         description: "qwerty4"
         tool_id: scanpy_filter
 dimredux:
-    description: "asdfasdf4"
+    description: "Dimensional reduction uses various means of comparing similarity or dissimilarity
+    between data points to construct a lower-dimensional graph that represents the overal structure
+    of the data"
     multi: True
     umap:
-        description: "randomwriting"
+        description: "Published in 2018, UMAP conserves both local and global data structures. While a
+        more-recent algorithm than t-SNE and PCA, UMAP is already widely used."
         RaceID:
-            description: "qwerty5"
+            description: "RaceID is an algorith for identification of rare and abundant cell types from sit"
             tool_id: raceid
     tsne:
-        description: "random2"
+        description: "A more-common method of dimensional reduction, t-SNE conserves local data structures
+        and is proven in use with large datasets."
         rtsne:
-            description: "qwerty6"
+            description: "R package for a standard t-SNE matrix and plot."
             tool_id: rtsne
     test:
         description: "random2"
