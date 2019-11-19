@@ -1,0 +1,22 @@
+alignmap:
+    description: "asdfasdf"
+    multi: True
+    align:
+        description: "TEST123"
+        kallisto:
+            description: "qwerty"
+            tool_id: "kallistobus"
+    map:
+        description: TEST345
+        moon:
+            description: qwerty2
+            tool_id: moonuno
+        star:
+            description: qwerty2
+            tool_id: starsolo
+quant:
+    description: asdfasdf2
+    multi: False
+    alevin:
+        tool_id: alevin
+        description: qwerty3

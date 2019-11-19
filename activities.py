@@ -14,56 +14,56 @@ class activity:
     def __init__(self, act_yaml):
         self.act_yaml = act_yaml
 
-    def parser(self):
+    def to_dict(self):
         '''Create dictionaries from files'''
         with open(self.act_yaml) as f:
             flow = yaml.load(f, Loader=yaml.FullLoader)
-        self.activities = flow
+        self.full_file = flow
 
     def tools_need(self):
         '''
         List of all possible tool ids from the yaml file
         '''
         need = []
-        for step in self.activities:
-            if self.activities[step]["multi"] == True:
-                versions = list(self.activities[step].keys())[2:]
+        for step in self.full_file:
+            if self.full_file[step]["multi"] == True:
+                versions = list(self.full_file[step].keys())[2:]
                 for version in versions:
-                    for x in self.activities[step][version]:
+                    for x in self.full_file[step][version]:
                         if x == "description":
                             pass
                         else:
-                            need.append(self.activities[step][version][x]["tool_id"])
+                            need.append(self.full_file[step][version][x]["tool_id"])
             else:
-                for x in self.activities[step]:
+                for x in self.full_file[step]:
                     if x == "description" or x == "multi":
                         pass
                     else:
-                        need.append(self.activities[step][x]["tool_id"])
+                        need.append(self.full_file[step][x]["tool_id"])
         self.need = need
 
     def step_select(self, step):
         '''
         For steps with multiple possiblities, return just the tools from selected option
         '''
-        options = list(self.activities[step])[2:]
+        options = list(self.full_file[step])[2:]
         for x in options:
-            print(x + ":", self.activities[step][x]["description"])
+            print(x + ":", self.full_file[step][x]["description"])
         selection = input("Which version of this step would you like to use? ")
         return(selection)
 
-    def flow_parse(self):
+    def step_tools(self):
         '''
         From activities yaml, returns list of viable tools for each step
         '''
         steps = {}
-        for step in list(self.activities.keys()):
-            if self.activities[step]["multi"] == True:
+        for step in list(self.full_file.keys()):
+            if self.full_file[step]["multi"] == True:
                 choice = self.step_select(step)
-                tools = self.activities[step][choice]
+                tools = self.full_file[step][choice]
                 tools.pop("description")
             else:
-                tools = self.activities[step]
+                tools = self.full_file[step]
                 tools.pop("multi")
                 tools.pop("description")
             steps[step] = tools
@@ -71,7 +71,7 @@ class activity:
 
     def tool_select(self):
         '''
-        Takes in output from flow_parse() to allow user to select a final tool for each step
+        Takes in output from step_tools() to allow user to select a final tool for each step
         Format of final dictionary:
         key: step_name
         value: galaxy tool_id
@@ -95,43 +95,43 @@ class activity:
         Removes all tools not installed on the instance from the activities dict and tells user what is not avaliable
         '''
         remove = []
-        for step in self.activities:
-            if self.activities[step]["multi"] == True:
-                versions = list(self.activities[step].keys())[2:]
+        for step in self.full_file:
+            if self.full_file[step]["multi"] == True:
+                versions = list(self.full_file[step].keys())[2:]
                 for version in versions:
-                    for x in self.activities[step][version]:
+                    for x in self.full_file[step][version]:
                         if x == "description":
                             pass
                         else:
-                            if self.activities[step][version][x]["tool_id"] in missing_list:
+                            if self.full_file[step][version][x]["tool_id"] in missing_list:
                                 print("Missing tool:", x + ". Retrieve from toolshed to make available.")
                                 remove.append([step, version, x])
             else:
-                for x in self.activities[step]:
+                for x in self.full_file[step]:
                         if x == "description" or x == "multi":
                             pass
                         else:
-                            if self.activities[step][x]["tool_id"] in missing_list:
+                            if self.full_file[step][x]["tool_id"] in missing_list:
                                 print("Missing tool:", x + ". Retrieve from toolshed to make available.")
                                 remove.append([step, x])
         for tool in remove:
             if len(tool) == 3:
-                del(self.activities[tool[0]][tool[1]][tool[2]])
+                del(self.full_file[tool[0]][tool[1]][tool[2]])
             else:
-                 del(self.activities[tool[0]][tool[1]])
+                 del(self.full_file[tool[0]][tool[1]])
 
 class shedlist:
 
     def __init__(self, tool_xml):
         self.toolbox = tool_xml
 
-    def parser(self):
+    def to_dict(self):
         with open(self.toolbox) as f:
             tools = xmltodict.parse(f.read())
         tools = tools["toolbox"]
         self.toolbox = tools
 
-    def installed(self):
+    def installed_list(self):
         '''
         List of all currently installed tools
         '''
@@ -163,41 +163,3 @@ def missing(activities_obj, shed_obj):
     '''
     miss = list(set(activities_obj.need).difference(set(shed_obj.installed)))
     return(miss)
-
-def test():
-    testyaml = """{'alignmap': {'description': 'asdfasdf',
-                                'multi': True,
-                                'align': {'description': 'TEST123',
-                                    'kallisto': {'tool_id': 'kallistobus', 'description': 'qwerty'}},
-                                'map': {'description': 'TEST345',
-                                    'star': {'tool_id': 'starsolo', 'description': 'qwerty2'},
-                                    'raceid': {'tool_id': 'raceid', 'description': 'qwerty2'}}},
-                                'quant': {'description': 'asdfasdf2', 'multi': False,
-                                    'alevin': {'tool_id': 'alevin', 'description': 'qwerty3'}}}"""
-    act1 = activity("test")
-    act1.activities = yaml.load(testyaml, Loader=yaml.Loader)
-
-    shed1 = shedlist("test")
-    shed1.toolbox =  """<?xml version="1.0"?>
-    <toolbox>
-        <section id="testing123" name="test" version="">
-            <tool id="upload1" />
-            <tool id="starsolo" />
-            <tool id="ucsc_table_direct_archaea1" />
-            <tool id="ebi_sra_main" />
-            <tool id="modENCODEfly" />
-            <tool id="kallistobus" />
-        </section>
-        <section/>
-        <section id="asdf">
-        </section>
-    </toolbox>"""
-    shed1.toolbox = xmltodict.parse(shed1.toolbox)
-    shed1.toolbox = shed1.toolbox["toolbox"]
-    shed1.installed()
-    act1.tools_need()
-    miss = missing(act1, shed1)
-    if miss == ["raceid", "alevin"]:
-        print("pass")
-    else:
-        print("fail")
