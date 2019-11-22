@@ -1,8 +1,7 @@
 import yaml
 import xmltodict
 
-class activity:
-
+class Activity:
     '''
     When all is run, available vars:
     activities: full yaml dict
@@ -11,14 +10,12 @@ class activity:
     final_list: dict of tools selected for each step
     '''
 
-    def __init__(self, act_yaml):
-        self.act_yaml = act_yaml
+    def __init__(self, activities_yaml):
+        self._load(activities_yaml)
 
-    def to_dict(self):
-        '''Create dictionaries from files'''
-        with open(self.act_yaml) as f:
-            flow = yaml.load(f, Loader=yaml.FullLoader)
-        self.full_file = flow
+    def _load(self, src):
+        with open(src) as f:
+            self.full_file = yaml.load(f, Loader=yaml.FullLoader)
 
     def tools_need(self):
         '''
@@ -30,9 +27,7 @@ class activity:
                 versions = list(self.full_file[step].keys())[2:]
                 for version in versions:
                     for x in self.full_file[step][version]:
-                        if x == "description":
-                            pass
-                        else:
+                        if x != "description" and x != 'multi':
                             need.append(self.full_file[step][version][x]["tool_id"])
             else:
                 for x in self.full_file[step]:
@@ -42,24 +37,30 @@ class activity:
                         need.append(self.full_file[step][x]["tool_id"])
         self.need = need
 
-    def step_select(self, step):
+    def _get_step_options(self, activity_step):
+        '''Breaks an activity step into all possible versions'''
+        return list(self.full_file[activity_step])[2:]
+
+    def  _get_step(self):
+        selection = input("Which version of this step would you like to use? ")
+        return selection
+
+    def _step_select(self, step):
         '''
         For steps with multiple possiblities, return just the tools from selected option
         '''
-        options = list(self.full_file[step])[2:]
-        for x in options:
-            print(x + ":", self.full_file[step][x]["description"])
-        selection = input("Which version of this step would you like to use? ")
-        return(selection)
+        for option in self._get_step_options(step):
+            print(option + ":", self.full_file[step][option]["description"])
+        return self._get_step()
 
     def step_tools(self):
         '''
         From activities yaml, returns list of viable tools for each step
         '''
         steps = {}
-        for step in list(self.full_file.keys()):
+        for step in self.full_file.keys():
             if self.full_file[step]["multi"] == True:
-                choice = self.step_select(step)
+                choice = self._step_select(step)
                 tools = self.full_file[step][choice]
                 tools.pop("description")
             else:
@@ -120,16 +121,14 @@ class activity:
             else:
                  del(self.full_file[tool[0]][tool[1]])
 
-class shedlist:
+class Shedlist:
 
     def __init__(self, tool_xml):
-        self.toolbox = tool_xml
+        self._load(tool_xml)
 
-    def to_dict(self):
-        with open(self.toolbox) as f:
-            tools = xmltodict.parse(f.read())
-        tools = tools["toolbox"]
-        self.toolbox = tools
+    def _load(self, src):
+        with open(src) as f:
+            self.toolbox = xmltodict.parse(f.read())["toolbox"]
 
     def installed_list(self):
         '''
@@ -137,7 +136,7 @@ class shedlist:
         '''
         installed = []
         for section in self.toolbox['section']:
-            if type(section) == str:
+            if isinstance(section, str):
                 #only a single section in toolshed for some reason
                 for tool in self.toolbox['section']['tool']:
                     installed.append(tool["@id"])
