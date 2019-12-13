@@ -41,7 +41,7 @@ class Activity:
         '''Breaks an activity step into all possible versions'''
         return list(self.full_file[activity_step])[2:]
 
-    def  _get_step(self):
+    def _get_step(self):
         selection = input("Which version of this step would you like to use? ")
         return selection
 
